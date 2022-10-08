@@ -1,0 +1,4 @@
+fastapi==0.75.2
+pydantic==1.8.2
+typing==3.7.4.3
+kafka-python==2.0.2

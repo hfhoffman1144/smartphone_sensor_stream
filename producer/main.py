@@ -1,8 +1,8 @@
 import json
 from fastapi import FastAPI
-from pydantic import BaseModel, StrictStr
+from pydantic import BaseModel
 from typing import List, Dict
-from kafka import KafkaConsumer, KafkaProducer
+from kafka import KafkaProducer
 
 TOPIC_NAME = "phone-stream"
 KAFKA_SERVER = "localhost:9092"
@@ -28,7 +28,7 @@ async def kafka_produce(data: SensorReading):
     json_payload = str.encode(json_payload)
     producer.send(TOPIC_NAME, json_payload)
     producer.flush()
-    
+
     return 200
 
 
