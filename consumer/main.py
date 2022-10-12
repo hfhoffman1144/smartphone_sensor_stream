@@ -2,7 +2,7 @@ from kafka import KafkaConsumer
 from json import loads
 
 TOPIC_NAME = "phone-stream"
-KAFKA_SERVER = "localhost:9092"
+KAFKA_SERVER = "localhost:9093"
 
 consumer = KafkaConsumer(
      TOPIC_NAME,

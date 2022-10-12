@@ -5,7 +5,7 @@ from typing import List, Dict
 from kafka import KafkaProducer
 
 TOPIC_NAME = "phone-stream"
-KAFKA_SERVER = "localhost:9092"
+KAFKA_SERVER = "localhost:9093"
 
 producer = KafkaProducer(
     bootstrap_servers = KAFKA_SERVER,
