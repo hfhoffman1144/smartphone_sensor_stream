@@ -3,6 +3,8 @@ from json import loads
 from enum import Enum
 from questdb.ingress import Sender
 from datetime import datetime
+import time
+import psycopg2 as pg
 
 
 class SensorName(Enum):
@@ -12,6 +14,15 @@ class SensorName(Enum):
 
 TOPIC_NAME = "phone-stream"
 KAFKA_SERVER = "localhost:9093"
+
+connection = pg.connect(user="admin",
+                            password="quest",
+                            host="127.0.0.1",
+                            port="8812",
+                            database="qdb",
+                            options='-c statement_timeout=300000')
+
+cursor = connection.cursor()
 
 def write_acc(data:dict, db_host:str, db_port:int, table_name:str):
     
@@ -32,24 +43,23 @@ def write_acc(data:dict, db_host:str, db_port:int, table_name:str):
 
     session_id = data['sessionId']
     device_id = data['deviceId']
-
+    
     for d in data['payload']:
 
         if d.get("name") == SensorName.ACC.value:
 
-            ts = datetime.fromtimestamp(d["time"] / 1000000000)
+            ts = str(datetime.fromtimestamp(d["time"] / 1000000000))
             x = d["values"]["x"]
             y = d["values"]["y"]
             z = d["values"]["z"]
             
 
-            with Sender(db_host, db_port) as sender:
+            cursor.execute("""INSERT INTO acc 
+            (device_id,	session_id,	recorded_timestamp,	x,	y,	z) 
+            VALUES (%s,%s,%s,%s,%s,%s)""", 
+            (device_id, session_id, ts, x, y, z))
 
-                sender.row(
-                    table_name,
-                    symbols={'device_id':str(device_id),'session_id': str(session_id)},
-                    columns={'recorded_timestamp': str(ts) , 'x':x, 'y':y, 'z':z})
-                sender.flush()
+            connection.commit()
 
 
 consumer = KafkaConsumer(
@@ -64,5 +74,6 @@ for message in consumer:
     message = message.value
     write_acc(message, "localhost", 9009, "acc")
     print(message)
-    print('###########################')
+    print('###############################')
     
+connection.close()
