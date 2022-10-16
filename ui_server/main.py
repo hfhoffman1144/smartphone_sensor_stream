@@ -57,7 +57,10 @@ async def message_stream(request: Request):
             # Checks for new messages and return them to client if any
             if new_messages():
 
-                data = pd.read_sql("select * from acc order by recorded_timestamp desc limit 10", connection)
+                data = pd.read_sql("""select recorded_timestamp, x, y, z from
+                                     acc where device_id != '86a5b0e3-6e06-40e2-b226-5a72bd39b65b'
+                                     order by recorded_timestamp desc limit 39""", 
+                                  connection)
 
                 message = json.dumps({'time':list(data['recorded_timestamp'].astype(str).values),
                                     'x':list(data['x'].astype(float).values),

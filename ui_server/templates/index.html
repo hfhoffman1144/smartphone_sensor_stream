@@ -99,11 +99,6 @@
             source.addEventListener("new_message", function(event) {
                 const data = JSON.parse(event.data);
 
-                config.data.labels.shift();
-                config.data.datasets[0].data.shift();
-
-                console.log(data);
-
                 config.data.labels = data.time;
                 config.data.datasets[0].data = data.x;
                 config.data.datasets[1].data = data.y;
