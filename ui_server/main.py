@@ -57,16 +57,32 @@ async def message_stream(request: Request):
             # Checks for new messages and return them to client if any
             if new_messages():
 
-                data = pd.read_sql("""select recorded_timestamp, x, y, z from
-                                     acc where device_id != '86a5b0e3-6e06-40e2-b226-5a72bd39b65b'
-                                     order by recorded_timestamp desc limit 39""", 
+                data = pd.read_sql("""with tmp as (select device_id,
+                                             recorded_timestamp,
+                                              x,
+                                              y,
+                                              z,
+                                              row_number() over(partition by device_id order by
+                                                                recorded_timestamp desc) as rn
+                                               from acc )
+
+                                        select * from tmp where rn <= 40""", 
                                   connection)
 
-                message = json.dumps({'time':list(data['recorded_timestamp'].astype(str).values),
-                                    'x':list(data['x'].astype(float).values),
-                                    'y':list(data['y'].astype(float).values),
-                                    'z':list(data['z'].astype(float).values)
-                                })
+                message_data = {}
+
+                for device_id in data['device_id'].unique():
+
+                    data_device = data[data['device_id']==device_id]
+
+                    message_data[device_id] = {
+                                    'time':list(data_device['recorded_timestamp'].astype(str).values),
+                                    'x':list(data_device['x'].astype(float).values),
+                                    'y':list(data_device['y'].astype(float).values),
+                                    'z':list(data_device['z'].astype(float).values)
+                                }
+
+                message = json.dumps(message_data)
                 yield {
                         "event": "new_message",
                         "id": "message_id",
