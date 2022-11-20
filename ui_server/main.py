@@ -90,6 +90,6 @@ async def message_stream(request: Request):
                         "data": message
                 }
 
-            await asyncio.sleep(0.5)
+            await asyncio.sleep(0.25)
 
     return EventSourceResponse(event_generator())

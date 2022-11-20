@@ -1,10 +1,9 @@
-from kafka import KafkaConsumer
-from json import loads
+import asyncio
+import json
 from enum import Enum
-from questdb.ingress import Sender
 from datetime import datetime
-import time
 import psycopg2 as pg
+from aiokafka import AIOKafkaConsumer
 
 
 class SensorName(Enum):
@@ -15,16 +14,7 @@ class SensorName(Enum):
 TOPIC_NAME = "phone-stream"
 KAFKA_SERVER = "localhost:9093"
 
-connection = pg.connect(user="admin",
-                            password="quest",
-                            host="127.0.0.1",
-                            port="8812",
-                            database="qdb",
-                            options='-c statement_timeout=300000')
-
-cursor = connection.cursor()
-
-def write_acc(data:dict, db_host:str, db_port:int, table_name:str):
+def write_acc(data:dict, connection):
     
     """
     Write phone accelerometer data to QuestDb 
@@ -33,12 +23,6 @@ def write_acc(data:dict, db_host:str, db_port:int, table_name:str):
     ----------
     data : dict
         The raw request data sent by the phone
-    db_host : str
-        The QuestDb host
-    db_port: int
-        The QuestDb port
-    table_name : str
-        The table to write to
     """
 
     session_id = data['sessionId']
@@ -54,26 +38,50 @@ def write_acc(data:dict, db_host:str, db_port:int, table_name:str):
             z = d["values"]["z"]
             
 
-            cursor.execute("""INSERT INTO acc 
-            (device_id,	session_id,	recorded_timestamp,	x,	y,	z) 
-            VALUES (%s,%s,%s,%s,%s,%s)""", 
-            (device_id, session_id, ts, x, y, z))
+            with connection.cursor() as cursor:
 
-            connection.commit()
+                cursor.execute("""INSERT INTO acc 
+                (device_id,	session_id,	recorded_timestamp,	x,	y,	z) 
+                VALUES (%s,%s,%s,%s,%s,%s)""", 
+                (device_id, session_id, ts, x, y, z))
 
+                connection.commit()
 
-consumer = KafkaConsumer(
-     TOPIC_NAME,
-     bootstrap_servers=[KAFKA_SERVER],
-     auto_offset_reset='earliest',
-     enable_auto_commit=True,
-     group_id='my-group',
-     value_deserializer=lambda x: loads(x.decode('utf-8')))
-
-for message in consumer:
-    message = message.value
-    write_acc(message, "localhost", 9009, "acc")
-    print(message)
-    print('###############################')
     
-connection.close()
+async def consume_messages() -> None:
+
+    connection = pg.connect(user="admin",
+                            password="quest",
+                            host="127.0.0.1",
+                            port="8812",
+                            database="qdb",
+                            options='-c statement_timeout=300000')
+   
+    loop = asyncio.get_event_loop()
+    consumer = AIOKafkaConsumer(
+        TOPIC_NAME,
+        loop=loop,
+        client_id='Phone Stream Producer',
+        bootstrap_servers=KAFKA_SERVER,
+        enable_auto_commit=False,
+    )
+
+    await consumer.start()
+    try:
+        async for msg in consumer:
+            print(msg.value)
+            print('################')
+            write_acc(json.loads(msg.value), connection)
+    finally:
+        await consumer.stop()
+        connection.close()
+
+async def main():
+
+    await consume_messages()
+
+asyncio.run(main())
+
+
+
+
