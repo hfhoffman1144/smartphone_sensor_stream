@@ -32,7 +32,7 @@ def write_acc(data:dict, connection):
 
         if d.get("name") == SensorName.ACC.value:
 
-            ts = str(datetime.fromtimestamp(d["time"] / 1000000000))
+            ts = str(datetime.fromtimestamp(int(d["time"]) / 1000000000))
             x = d["values"]["x"]
             y = d["values"]["y"]
             z = d["values"]["z"]
