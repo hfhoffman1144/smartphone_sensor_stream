@@ -18,7 +18,6 @@ producer = AIOKafkaProducer(
 async def startup_event():
     await producer.start()
 
-
 @app.on_event("shutdown")
 async def shutdown_event():
     await producer.stop()

@@ -1,8 +1,33 @@
-version: "2"
+version: '3'
+
 services:
+  spark:
+    image: docker.io/bitnami/spark:3.3
+    environment:
+      - SPARK_MODE=master
+    ports:
+      - '8080:8080'
+      - '4040:4040'
+      - '7077:7077'
+    volumes:
+      - ./data:/data
+      - ./src:/src
+  spark-worker:
+    image: docker.io/bitnami/spark:3.3
+    environment:
+      - SPARK_MODE=worker
+      - SPARK_MASTER_URL=spark://spark:7077
+      - SPARK_WORKER_MEMORY=4G
+      - SPARK_EXECUTOR_MEMORY=4G
+      - SPARK_WORKER_CORES=4
+
+    volumes:
+      - ./data:/data
+      - ./src:/src
+
   zookeeper:
     container_name: zookeeper
-    image: docker.io/bitnami/zookeeper:3.7
+    image: docker.io/bitnami/zookeeper:3.8
     ports:
       - "2181:2181"
     volumes:
@@ -11,7 +36,7 @@ services:
       - ALLOW_ANONYMOUS_LOGIN=yes
   kafka:
     container_name: kafka
-    image: docker.io/bitnami/kafka:2
+    image: docker.io/bitnami/kafka:3.3
     ports:
       - "9092:9092"
       - "9093:9093"
