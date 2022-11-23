@@ -8,3 +8,4 @@ class SensorName(Enum):
     
     ACC = 'accelerometeruncalibrated'
     GYRO = 'gyroscopeuncalibrated'
+    MAG = 'magnetometeruncalibrated'

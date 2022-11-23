@@ -3,15 +3,15 @@ from fastapi import FastAPI
 import asyncio
 from aiokafka import AIOKafkaProducer
 from schemas.sensors import SensorReading, SensorResponse
-from core.config import PROJECT_NAME, KAFKA_SERVER, TOPIC_NAME
+from core.config import app_config
 from loguru import logger
 
-app = FastAPI(title=PROJECT_NAME)
+app = FastAPI(title=app_config.PROJECT_NAME)
 
 loop = asyncio.get_event_loop()
 
 producer = AIOKafkaProducer(
-    loop=loop, client_id=PROJECT_NAME, bootstrap_servers=KAFKA_SERVER
+    loop=loop, client_id=app_config.PROJECT_NAME, bootstrap_servers=app_config.KAFKA_SERVER
 )
 
 @app.on_event("startup")
@@ -40,7 +40,7 @@ async def kafka_produce(data: SensorReading):
         from the request.
     """
 
-    await producer.send(TOPIC_NAME, json.dumps(data.dict()).encode("ascii"))
+    await producer.send(app_config.TOPIC_NAME, json.dumps(data.dict()).encode("ascii"))
 
     response = SensorResponse(
         messageId=data.messageId,

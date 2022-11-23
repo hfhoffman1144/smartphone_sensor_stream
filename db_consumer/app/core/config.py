@@ -1,16 +1,22 @@
-from starlette.config import Config
+from pydantic import BaseSettings
 
-# Load .env file with config variables
-config = Config(".env")
+# Load .env file with config variables into a pydantic BaseSetting object
+class AppConfig(BaseSettings):
 
-# Kafka config
-PROJECT_NAME : str = config("PROJECT_NAME")
-KAFKA_SERVER : str = config("KAFKA_SERVER")
-TOPIC_NAME : str = config("TOPIC_NAME")
+    # Kafka config
+    PROJECT_NAME : str
+    KAFKA_SERVER : str
+    TOPIC_NAME : str
 
-# QuestDB config
-DB_USER : str = config("DB_USER")
-DB_PASSWORD : str = config("DB_PASSWORD")
-DB_HOST : str = config("DB_HOST")
-DB_PORT : str = config("DB_PORT")
-DB_NAME : str = config("DB_NAME")
+    # QuestDB config
+    DB_USER : str
+    DB_PASSWORD : str 
+    DB_HOST : str 
+    DB_PORT : str 
+    DB_NAME : str 
+
+    class Config:
+
+        env_file = ".env"
+
+app_config = AppConfig()
