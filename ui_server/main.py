@@ -64,7 +64,8 @@ async def message_stream(request: Request):
                                               z,
                                               row_number() over(partition by device_id order by
                                                                 recorded_timestamp desc) as rn
-                                               from acc )
+                                               from acc 
+                                            )
 
                                         select * from tmp where rn <= 40""", 
                                   connection)

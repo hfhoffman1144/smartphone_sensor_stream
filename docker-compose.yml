@@ -1,55 +1,73 @@
-version: '3'
+version: '3.8'
 
 services:
-  spark:
-    image: docker.io/bitnami/spark:3.3
-    environment:
-      - SPARK_MODE=master
-    ports:
-      - '8080:8080'
-      - '4040:4040'
-      - '7077:7077'
-    volumes:
-      - ./data:/data
-      - ./src:/src
-  spark-worker:
-    image: docker.io/bitnami/spark:3.3
-    environment:
-      - SPARK_MODE=worker
-      - SPARK_MASTER_URL=spark://spark:7077
-      - SPARK_WORKER_MEMORY=4G
-      - SPARK_EXECUTOR_MEMORY=4G
-      - SPARK_WORKER_CORES=4
-
-    volumes:
-      - ./data:/data
-      - ./src:/src
-
   zookeeper:
-    container_name: zookeeper
-    image: docker.io/bitnami/zookeeper:3.8
+    image: bitnami/zookeeper:latest
     ports:
-      - "2181:2181"
-    volumes:
-      - "zookeeper_data:/bitnami"
+      - 2181:2181
     environment:
       - ALLOW_ANONYMOUS_LOGIN=yes
+
   kafka:
-    container_name: kafka
-    image: docker.io/bitnami/kafka:3.3
+    image: bitnami/kafka:latest
     ports:
-      - "9092:9092"
-      - "9093:9093"
-    volumes:
-      - "kafka_data:/bitnami"
+      - 9092:9092
+      - 9093:9093
     environment:
-      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_BROKER_ID=1
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://127.0.0.1:9092
       - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
-      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CLIENT:PLAINTEXT,EXTERNAL:PLAINTEXT
-      - KAFKA_CFG_LISTENERS=CLIENT://:9092,EXTERNAL://:9093
-      - KAFKA_CFG_ADVERTISED_LISTENERS=CLIENT://kafka:9092,EXTERNAL://localhost:9093
-      - KAFKA_INTER_BROKER_LISTENER_NAME=CLIENT
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CLIENT:PLAINTEXT
+      - KAFKA_CFG_LISTENERS=CLIENT://:9092
+      - KAFKA_CFG_ADVERTISED_LISTENERS=CLIENT://kafka:9092
+      - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=CLIENT
     depends_on:
+      - zookeeper
+
+  questdb:
+    image: questdb/questdb
+    container_name: questdb
+    restart: always
+    ports:
+      - 9000:9000
+      - 9009:9009
+      - 8812:8812
+      - 9003:9003
+    volumes:
+      - ./questdb:/root/.questdb
+    environment:
+      - QDB_LOG_W_STDOUT_LEVEL=ERROR
+      - QDB_LOG_W_FILE_LEVEL=ERROR
+      - QDB_LOG_W_HTTP_MIN_LEVEL=ERROR
+      - QDB_SHARED_WORKER_COUNT=2
+      - QDB_PG_USER=${DB_USER}
+      - QDB_PG_PASSWORD=${DB_PASSWORD}
+      - QDB_TELEMETRY_ENABLED=false
+  producer:
+    build:
+      context: ./producer
+      dockerfile: Dockerfile
+    command: uvicorn main:app --workers 1 --host 0.0.0.0 --port 8000
+    ports:
+      - 8000:8000
+    environment:
+      - KAFKA_HOST=kafka
+      - KAFKA_PORT=9092
+    depends_on:
+      - kafka
+      - zookeeper
+  db_consumer:
+    build:
+      context: ./db_consumer
+      dockerfile: Dockerfile
+    command: python main.py
+    environment:
+      - KAFKA_HOST=kafka
+      - KAFKA_PORT=9092
+    depends_on:
+      - kafka
       - zookeeper
   kafka-ui:
     image: provectuslabs/kafka-ui
