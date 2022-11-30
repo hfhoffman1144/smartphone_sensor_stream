@@ -1,6 +1,9 @@
 from datetime import datetime
-from models.sensors import SensorName
 import psycopg2 as pg
+import pandas as pd
+from io import StringIO
+import requests
+from models.sensors import SensorName
 
 
 # Map sensor names from a payload to their corresponding table in the db
@@ -45,7 +48,7 @@ def create_connection(host:str, port:str, user_name:str, password:str, database:
 def create_triaxial_table(table_name:str, connection:pg.connect):
 
     """
-    Create a table that can store data from a triaxial smartphone sensor
+    Create a table that can store data from triaxial smartphone sensors
 
     Parameters
     ----------
@@ -62,6 +65,7 @@ def create_triaxial_table(table_name:str, connection:pg.connect):
             session_id TEXT,
             device_timestamp TEXT,
             recorded_timestamp TEXT,
+            sensor_name TEXT,
             x REAL,
             y REAL,
             z REAL)"""
@@ -70,7 +74,7 @@ def create_triaxial_table(table_name:str, connection:pg.connect):
     connection.commit()
 
 
-def write_sensor_payloads(data:dict, connection:pg.connect):
+def write_sensor_payloads(data:dict, server_url:str, table_name:str):
     
     """
     Write phone sensor data to database tables
@@ -79,31 +83,46 @@ def write_sensor_payloads(data:dict, connection:pg.connect):
     ----------
     data : dict
         The raw request data sent by the phone
-    connection: pg.connection
-        A pyscopg2 connection object
+    server_url : str
+        The URL where sensor data will be written to
+    table_name : str
+        The name of the table to write to 
     """
 
     session_id = data['sessionId']
     device_id = data['deviceId']
+
+    # Create an empty dict to store structured sensor from the payload
+    structured_payload = {'device_id':[],
+                            'session_id':[],
+                            'device_timestamp':[],
+                            'recorded_timestamp':[],
+                            'sensor_name':[],
+                            'x':[],
+                            'y':[],
+                            'z':[]
+                            }
     
     for d in data['payload']:
 
         # Triaxial sensors
-        if d.get("name") in [SensorName.ACC.value, SensorName.GYRO.value, SensorName.MAG.value]:
+        if d.get("name") in SENSOR_TO_TABLE_NAME.keys():
 
-            device_ts = str(datetime.fromtimestamp(int(d["time"]) / 1000000000))
-            recorded_ts = str(datetime.utcnow())
-            x = d["values"]["x"]
-            y = d["values"]["y"]
-            z = d["values"]["z"]
-            table_name = SENSOR_TO_TABLE_NAME.get(d.get("name"))
-            
+            structured_payload['device_id'].append(device_id)
+            structured_payload['session_id'].append(session_id)
+            structured_payload['device_timestamp'].append(str(datetime.fromtimestamp(int(d["time"]) / 1000000000)))
+            structured_payload['recorded_timestamp'].append(str(datetime.utcnow()))
+            structured_payload['sensor_name'].append(SENSOR_TO_TABLE_NAME.get(d.get("name")))
+            structured_payload['x'].append(d["values"]["x"])
+            structured_payload['y'].append(d["values"]["y"])
+            structured_payload['z'].append(d["values"]["z"])  
 
-            with connection.cursor() as cursor:
+    output = StringIO()
+    pd.DataFrame(structured_payload).to_csv(output, sep=',', header=True, index=False)
+    output.seek(0)
+    contents = output.getvalue()
+    csv = {'data': (table_name, contents)}
+    response = requests.post(server_url, files=csv)
 
-                cursor.execute(f"""INSERT INTO {table_name} 
-                (device_id,	session_id, device_timestamp, recorded_timestamp, x, y,	z) 
-                VALUES (%s,%s,%s,%s,%s,%s,%s)""", 
-                (device_id, session_id, device_ts, recorded_ts, x, y, z))
 
-                connection.commit()
+    

@@ -4,8 +4,7 @@ from aiokafka import AIOKafkaConsumer
 from core.config import app_config
 from db.ingress import (create_connection,
                         create_triaxial_table,
-                        write_sensor_payloads,
-                        SENSOR_TO_TABLE_NAME)
+                        write_sensor_payloads)
 
 
 async def consume_messages() -> None:
@@ -25,7 +24,7 @@ async def consume_messages() -> None:
         app_config.TOPIC_NAME,
         loop=loop,
         client_id='all',
-        bootstrap_servers=app_config.KAFKA_SERVER,
+        bootstrap_servers=app_config.KAFKA_URL,
         enable_auto_commit=False,
     )
 
@@ -34,7 +33,7 @@ async def consume_messages() -> None:
         async for msg in consumer:
             print(msg.value)
             print('################')
-            write_sensor_payloads(json.loads(msg.value), connection)
+            write_sensor_payloads(json.loads(msg.value), app_config.DB_IMP_URL, app_config.DEVICE_OFFLOAD_TBL_NAME)
     finally:
         await consumer.stop()
         connection.close()
@@ -45,16 +44,14 @@ async def main():
 
 if __name__ == "__main__":
 
-    # Create tables to store triaxial sensor data if they don't exist
-    for table_name in SENSOR_TO_TABLE_NAME.values():
+    # Create the table to store triaxial sensor data if it doesn't exist
+    connection = create_connection(host=app_config.DB_HOST,
+                                    port=app_config.DB_PORT,
+                                    user_name=app_config.DB_USER,
+                                    password=app_config.DB_PASSWORD,
+                                    database=app_config.DB_NAME)
 
-        connection = create_connection(host=app_config.DB_HOST,
-                                       port=app_config.DB_PORT,
-                                       user_name=app_config.DB_USER,
-                                       password=app_config.DB_PASSWORD,
-                                       database=app_config.DB_NAME)
-
-        create_triaxial_table(table_name, connection)
+    create_triaxial_table(app_config.DEVICE_OFFLOAD_TBL_NAME, connection)
 
     asyncio.run(main())
 

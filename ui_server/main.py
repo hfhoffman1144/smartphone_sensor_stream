@@ -1,14 +1,10 @@
 import asyncio
 import json
 import logging
-import random
 import psycopg2 as pg
 import sys
 from enum import Enum
-import numpy as np
 import pandas as pd
-from datetime import datetime
-from typing import Iterator
 from fastapi import FastAPI
 from fastapi.requests import Request
 from fastapi.responses import HTMLResponse, StreamingResponse
@@ -64,7 +60,8 @@ async def message_stream(request: Request):
                                               z,
                                               row_number() over(partition by device_id order by
                                                                 recorded_timestamp desc) as rn
-                                               from acc 
+                                               from device_offload
+                                               where sensor_name = 'acc'
                                             )
 
                                         select * from tmp where rn <= 40""", 
@@ -77,7 +74,7 @@ async def message_stream(request: Request):
                     data_device = data[data['device_id']==device_id]
 
                     message_data[device_id] = {
-                                    'time':list(data_device['recorded_timestamp'].astype(str).values),
+                                    'time':[t[11:] for t in list(data_device['recorded_timestamp'].astype(str).values)],
                                     'x':list(data_device['x'].astype(float).values),
                                     'y':list(data_device['y'].astype(float).values),
                                     'z':list(data_device['z'].astype(float).values)
@@ -91,6 +88,6 @@ async def message_stream(request: Request):
                         "data": message
                 }
 
-            await asyncio.sleep(0.25)
+            await asyncio.sleep(0.1)
 
     return EventSourceResponse(event_generator())

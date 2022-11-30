@@ -11,7 +11,9 @@ app = FastAPI(title=app_config.PROJECT_NAME)
 loop = asyncio.get_event_loop()
 
 producer = AIOKafkaProducer(
-    loop=loop, client_id=app_config.PROJECT_NAME, bootstrap_servers=app_config.KAFKA_SERVER
+    loop=loop,
+    client_id=app_config.PROJECT_NAME,
+    bootstrap_servers=app_config.KAFKA_URL
 )
 
 @app.on_event("startup")

@@ -30,11 +30,12 @@ services:
     image: questdb/questdb
     container_name: questdb
     restart: always
+    expose:
+      - 9000
+      - 9009
+      - 9003
     ports:
-      - 9000:9000
-      - 9009:9009
       - 8812:8812
-      - 9003:9003
     volumes:
       - ./questdb:/root/.questdb
     environment:
@@ -45,6 +46,7 @@ services:
       - QDB_PG_USER=${DB_USER}
       - QDB_PG_PASSWORD=${DB_PASSWORD}
       - QDB_TELEMETRY_ENABLED=false
+      - QDB_CAIRO_SQL_COPY_ROOT=./
   producer:
     build:
       context: ./producer
@@ -52,9 +54,8 @@ services:
     command: uvicorn main:app --workers 1 --host 0.0.0.0 --port 8000
     ports:
       - 8000:8000
-    environment:
-      - KAFKA_HOST=kafka
-      - KAFKA_PORT=9092
+    env_file:
+      - .env
     depends_on:
       - kafka
       - zookeeper
@@ -63,9 +64,8 @@ services:
       context: ./db_consumer
       dockerfile: Dockerfile
     command: python main.py
-    environment:
-      - KAFKA_HOST=kafka
-      - KAFKA_PORT=9092
+    env_file:
+      - .env
     depends_on:
       - kafka
       - zookeeper
