@@ -6,8 +6,8 @@ import requests
 from models.sensors import SensorName
 
 
-# Map sensor names from a payload to their corresponding table in the db
-SENSOR_TO_TABLE_NAME = {
+# Map sensor names from a payload to their corresponding name in the db
+DEVICE_TO_DB_SENSOR_NAME = {
 
     SensorName.ACC.value: 'acc',
     SensorName.GYRO.value: 'gyro',
@@ -106,13 +106,13 @@ def write_sensor_payloads(data:dict, server_url:str, table_name:str):
     for d in data['payload']:
 
         # Triaxial sensors
-        if d.get("name") in SENSOR_TO_TABLE_NAME.keys():
+        if d.get("name") in DEVICE_TO_DB_SENSOR_NAME.keys():
 
             structured_payload['device_id'].append(device_id)
             structured_payload['session_id'].append(session_id)
             structured_payload['device_timestamp'].append(str(datetime.fromtimestamp(int(d["time"]) / 1000000000)))
             structured_payload['recorded_timestamp'].append(str(datetime.utcnow()))
-            structured_payload['sensor_name'].append(SENSOR_TO_TABLE_NAME.get(d.get("name")))
+            structured_payload['sensor_name'].append(DEVICE_TO_DB_SENSOR_NAME.get(d.get("name")))
             structured_payload['x'].append(d["values"]["x"])
             structured_payload['y'].append(d["values"]["y"])
             structured_payload['z'].append(d["values"]["z"])  

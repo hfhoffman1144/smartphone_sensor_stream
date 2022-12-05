@@ -1,38 +1,45 @@
 import asyncio
 import json
 import logging
-import psycopg2 as pg
 import sys
-from enum import Enum
-import pandas as pd
 from fastapi import FastAPI
 from fastapi.requests import Request
-from fastapi.responses import HTMLResponse, StreamingResponse
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from sse_starlette.sse import EventSourceResponse
+from core.config import app_config
+from db.data_api import create_connection, get_recent_triaxial_data, DEVICE_TO_DB_SENSOR_NAME
+from models.sensors import SensorName
 
 
-connection = pg.connect(user="admin",
-                            password="quest",
-                            host="127.0.0.1",
-                            port="8812",
-                            database="qdb",
-                            options='-c statement_timeout=300000')
-
-
-class SensorName(Enum):
-    
-    ACC = 'accelerometeruncalibrated'
-    GYRO = 'gyroscopeuncalibrated'
-
-TOPIC_NAME = "phone-stream"
-KAFKA_SERVER = "localhost:9093"
-STREAM_DELAY = 1
+CONNECTION = create_connection(app_config.DB_HOST,
+                               app_config.DB_PORT,
+                               app_config.DB_USER,
+                               app_config.DB_PASSWORD,
+                               app_config.DB_NAME )
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 logger = logging.getLogger(__name__)
 
 app = FastAPI()
+origins = [
+   f"http://localhost:{app_config.UI_PORT}",
+   f"http://127.0.0.1:{app_config.UI_PORT}",
+   f"http://0.0.0.0:{app_config.UI_PORT}"
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+app.mount("/static", StaticFiles(directory="static"), name="static")
+templates = Jinja2Templates(directory="templates")
 templates = Jinja2Templates(directory="templates")
 
 @app.get("/", response_class=HTMLResponse)
@@ -46,26 +53,19 @@ async def message_stream(request: Request):
         yield True
     async def event_generator():
         while True:
-            # If client was closed the connection
+            # Close connection if client is closed
             if await request.is_disconnected():
                 break
 
-            # Checks for new messages and return them to client if any
+            # Checks for new messages and return them to client
             if new_messages():
 
-                data = pd.read_sql("""with tmp as (select device_id,
-                                             recorded_timestamp,
-                                              x,
-                                              y,
-                                              z,
-                                              row_number() over(partition by device_id order by
-                                                                recorded_timestamp desc) as rn
-                                               from device_offload
-                                               where sensor_name = 'acc'
-                                            )
-
-                                        select * from tmp where rn <= 40""", 
-                                  connection)
+                data = get_recent_triaxial_data(connection=CONNECTION, 
+                                                table_name=app_config.DB_TRIAXIAL_OFFLOAD_TABLE_NAME,
+                                                sensor_name=DEVICE_TO_DB_SENSOR_NAME[SensorName.ACC.value],
+                                                sample_rate=app_config.PHONE_SAMPLE_RATE,
+                                                num_seconds=1,
+                                                max_lookback_seconds=60)                
 
                 message_data = {}
 
