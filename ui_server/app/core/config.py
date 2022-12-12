@@ -4,18 +4,18 @@ from pydantic import BaseSettings
 class AppConfig(BaseSettings):
 
     # QuestDB config
-    DB_USER : str = "admin"
-    DB_PASSWORD : str = "quest"
-    DB_HOST : str = "127.0.0.1"
-    DB_PORT : str = "8812"
-    DB_NAME : str = "qdb"
-    DB_TRIAXIAL_OFFLOAD_TABLE_NAME = "device_offload"
+    DB_USER : str 
+    DB_PASSWORD : str
+    DB_HOST : str
+    DB_PORT : str 
+    DB_NAME : str
+    DB_TRIAXIAL_OFFLOAD_TABLE_NAME : str
 
     # Application config
-    UI_PORT : int = 8080
+    UI_PORT : int
 
     # Misc config
-    PHONE_SAMPLE_RATE : int = 50
+    PHONE_SAMPLE_RATE : int
 
     class Config:
 

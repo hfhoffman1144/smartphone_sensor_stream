@@ -17,7 +17,7 @@ class AppConfig(BaseSettings):
     DB_PORT : str 
     DB_IMP_PORT : str
     DB_NAME : str 
-    DEVICE_OFFLOAD_TBL_NAME : str
+    DB_TRIAXIAL_OFFLOAD_TABLE_NAME : str
     DB_IMP_URL : str =  ""
 
     class Config:

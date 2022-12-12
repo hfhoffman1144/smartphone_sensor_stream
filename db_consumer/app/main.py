@@ -33,7 +33,7 @@ async def consume_messages() -> None:
         async for msg in consumer:
             print(msg.value)
             print('################')
-            write_sensor_payloads(json.loads(msg.value), app_config.DB_IMP_URL, app_config.DEVICE_OFFLOAD_TBL_NAME)
+            write_sensor_payloads(json.loads(msg.value), app_config.DB_IMP_URL, app_config.DB_TRIAXIAL_OFFLOAD_TABLE_NAME)
     finally:
         await consumer.stop()
         connection.close()
@@ -51,7 +51,7 @@ if __name__ == "__main__":
                                     password=app_config.DB_PASSWORD,
                                     database=app_config.DB_NAME)
 
-    create_triaxial_table(app_config.DEVICE_OFFLOAD_TBL_NAME, connection)
+    create_triaxial_table(app_config.DB_TRIAXIAL_OFFLOAD_TABLE_NAME, connection)
 
     asyncio.run(main())
 

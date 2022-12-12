@@ -69,6 +69,17 @@ services:
     depends_on:
       - kafka
       - zookeeper
+  ui_server:
+    build:
+      context: ./ui_server
+      dockerfile: Dockerfile
+    command: uvicorn main:app --workers 1 --host 0.0.0.0 --port 5000
+    ports:
+      - 5000:5000
+    env_file:
+      - .env
+    depends_on:
+      - db_consumer
   kafka-ui:
     image: provectuslabs/kafka-ui
     container_name: kafka-ui
