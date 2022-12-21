@@ -4,21 +4,23 @@ from aiokafka import AIOKafkaConsumer
 from core.config import app_config
 from db.ingress import (create_connection,
                         create_triaxial_table,
-                        write_sensor_payloads)
+                        write_triaxial_sensor_data)
 
 
 async def consume_messages() -> None:
 
     """
-    Coroutine to consume smart phone sensor messages from kafka topic
+    Coroutine to consume smart phone sensor messages from a kafka topic
     """
 
+    # Create a QuestDB connection
     connection = create_connection(host=app_config.DB_HOST,
                                    port=app_config.DB_PORT,
                                    user_name=app_config.DB_USER,
                                    password=app_config.DB_PASSWORD,
                                    database=app_config.DB_NAME)
-   
+    
+    # Instantiate the event loop and consumer
     loop = asyncio.get_event_loop()
     consumer = AIOKafkaConsumer(
         app_config.TOPIC_NAME,
@@ -33,7 +35,8 @@ async def consume_messages() -> None:
         async for msg in consumer:
             print(msg.value)
             print('################')
-            write_sensor_payloads(json.loads(msg.value), app_config.DB_IMP_URL, app_config.DB_TRIAXIAL_OFFLOAD_TABLE_NAME)
+            # Format each message in the log and write to QuestDB
+            write_triaxial_sensor_data(json.loads(msg.value), app_config.DB_IMP_URL, app_config.DB_TRIAXIAL_OFFLOAD_TABLE_NAME)
     finally:
         await consumer.stop()
         connection.close()

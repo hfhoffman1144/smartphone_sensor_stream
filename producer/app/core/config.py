@@ -18,7 +18,3 @@ class AppConfig(BaseSettings):
         return values['KAFKA_HOST'] + ":" + values['KAFKA_PORT'] 
 
 app_config = AppConfig()
-
-
-
-

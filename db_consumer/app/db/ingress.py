@@ -74,10 +74,10 @@ def create_triaxial_table(table_name:str, connection:pg.connect):
     connection.commit()
 
 
-def write_sensor_payloads(data:dict, server_url:str, table_name:str):
+def write_triaxial_sensor_data(data:dict, server_url:str, table_name:str):
     
     """
-    Write phone sensor data to database tables
+    Write triaxial phone sensor data to database tables
 
     Parameters
     ----------
