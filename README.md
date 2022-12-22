@@ -1,7 +1,7 @@
 # smartphone_sensor_stream
 Stream smartphone data from Sensor Logger (see https://github.com/tszheichoi/awesome-sensor-logger#the-sensor-logger-app) with FastAPI, Kafka, QuestDB, and Docker. A quick demo is available on YouTube: https://www.youtube.com/shorts/zRUVvz5vsl8
 
-## Gettings Started
+## Getting Started
 1. Make sure Docker Compose in installed on your machine: https://docker-docs.netlify.app/compose/install/
 2. Install Sensor Logger on your smartphone: https://www.tszheichoi.com/sensorlogger
 3. Ensure that your smartphone and host machine are on the same WI-FI network, and identify the IP address of your host machine. On Mac, this can be found under System Preferences -> Network:
