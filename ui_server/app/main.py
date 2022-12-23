@@ -53,11 +53,10 @@ async def message_stream(request: Request):
         yield True
     async def event_generator():
         while True:
-            # Close connection if client is closed
+           
             if await request.is_disconnected():
                 break
 
-            # Checks for new messages and return them to client
             if new_messages():
 
                 data = get_recent_triaxial_data(connection=CONNECTION, 

@@ -43,7 +43,7 @@ def create_connection(host:str, port:str, user_name:str, password:str, database:
 
 def get_recent_triaxial_data(connection:pg.connect,
                              table_name:str,
-                             sensor_name:SensorName,
+                             sensor_name:str,
                              sample_rate:int,
                              num_seconds:float,
                              max_lookback_seconds:float):
