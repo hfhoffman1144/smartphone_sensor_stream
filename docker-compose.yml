@@ -73,9 +73,9 @@ services:
     build:
       context: ./ui_server
       dockerfile: Dockerfile
-    command: uvicorn main:app --workers 1 --host 0.0.0.0 --port 5000
+    command: uvicorn main:app --workers 1 --host 0.0.0.0 --port 5001
     ports:
-      - 5000:5000
+      - 5001:5001
     env_file:
       - .env
     depends_on:

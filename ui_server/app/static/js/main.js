@@ -102,7 +102,7 @@ $(document).ready(function() {
 
     }
 
-    const source = new EventSource("http://127.0.0.1:5000/chart-data");
+    const source = new EventSource("http://127.0.0.1:5001/chart-data");
 
     source.addEventListener("new_message", function(event) {
 

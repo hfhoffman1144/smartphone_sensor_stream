@@ -14,7 +14,7 @@ Stream smartphone data from Sensor Logger (see https://github.com/tszheichoi/awe
 
 5. From the command line, run `docker-compose up --build` in the same directory as the `docker-compose.yml` file.
 
-6. Wait for build to complete and visit http://localhost:5000 on the host machine. Click "Start Recording" in Sensor Logger:
+6. Wait for build to complete and visit http://localhost:5001 on the host machine. Click "Start Recording" in Sensor Logger:
 
 ![image info](./start.png)
 
