@@ -20,14 +20,13 @@ async def consume_messages() -> None:
                                    password=app_config.DB_PASSWORD,
                                    database=app_config.DB_NAME)
     
-    # Instantiate the event loop and consumer
-    loop = asyncio.get_event_loop()
+    # Instantiate consumer
     consumer = AIOKafkaConsumer(
         app_config.TOPIC_NAME,
-        loop=loop,
-        client_id='all',
+        client_id='db_consumer',
+        group_id='db_consumer',
         bootstrap_servers=app_config.KAFKA_URL,
-        enable_auto_commit=False,
+        enable_auto_commit=False,  # why?
     )
 
     await consumer.start()
