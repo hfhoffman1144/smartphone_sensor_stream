@@ -56,29 +56,31 @@ placeholder = st.empty()
 # near real-time / live feed simulation
 async def main():
     while True:
-        data_dict = await data_generator()
-        with placeholder.container():
-            # create three columns
-            x_col, y_col, z_col = st.columns(3)
-            x, y, z = data_dict['x'], data_dict['y'], data_dict['z']
-            print(x,y,z)
+        try:
+            data_dict = await data_generator()
+            with placeholder.container():
+                # create three columns
+                x_col, y_col, z_col = st.columns(3)
+                x, y, z = data_dict['x'], data_dict['y'], data_dict['z']
+                print(x,y,z)
 
-            # fill in those three columns with respective metrics or KPIs
-            x_col.metric(
-                label="x",
-                value=x,
-            )
-            
-            y_col.metric(
-                label="y",
-                value=y,
-            )
-            
-            z_col.metric(
-                label="z",
-                value=z,
-            )
-
+                # fill in those three columns with respective metrics or KPIs
+                x_col.metric(
+                    label="x",
+                    value=x,
+                )
+                
+                y_col.metric(
+                    label="y",
+                    value=y,
+                )
+                
+                z_col.metric(
+                    label="z",
+                    value=z,
+                )
+            time.sleep(0.01)
+        except Exception:
             time.sleep(0.01)
 
 asyncio.run(main())
