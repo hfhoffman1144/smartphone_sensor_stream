@@ -31,10 +31,10 @@ services:
     container_name: questdb
     restart: always
     expose:
-      - 9000
       - 9009
       - 9003
     ports:
+      - 9000:9000
       - 8812:8812
     volumes:
       - ./questdb:/root/.questdb
@@ -73,7 +73,7 @@ services:
     build:
       context: ./ui_server
       dockerfile: Dockerfile
-    command: uvicorn main:app --workers 1 --host 0.0.0.0 --port 5001
+    command: streamlit run streamlit.py --server.port 5001
     ports:
       - 5001:5001
     env_file:
