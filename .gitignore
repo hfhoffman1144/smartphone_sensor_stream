@@ -1,2 +1,4 @@
 .env
 questdb
+.venv
+__pycache__

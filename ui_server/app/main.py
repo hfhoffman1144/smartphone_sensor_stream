@@ -40,7 +40,6 @@ app.add_middleware(
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
-templates = Jinja2Templates(directory="templates")
 
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request) -> templates.TemplateResponse:
@@ -50,6 +49,9 @@ async def index(request: Request) -> templates.TemplateResponse:
 @app.get('/chart-data')
 async def message_stream(request: Request):
     def new_messages():
+        """
+        This can be used for listening for upstream data update
+        """
         yield True
     async def event_generator():
         while True:
