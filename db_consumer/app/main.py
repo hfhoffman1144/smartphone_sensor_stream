@@ -32,8 +32,6 @@ async def consume_messages() -> None:
     await consumer.start()
     try:
         async for msg in consumer:
-            print(msg.value)
-            print('################')
             # Format each message in the log and write to QuestDB
             write_triaxial_sensor_data(json.loads(msg.value), app_config.DB_IMP_URL, app_config.DB_TRIAXIAL_OFFLOAD_TABLE_NAME)
     finally:

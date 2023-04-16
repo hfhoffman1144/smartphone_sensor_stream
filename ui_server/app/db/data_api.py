@@ -1,5 +1,8 @@
 import pandas as pd
 import psycopg2 as pg
+
+import warnings
+
 from models.sensors import SensorName
 
 # Map sensor names from a payload to their corresponding name in the db
@@ -93,7 +96,9 @@ def get_recent_triaxial_data(connection:pg.connect,
                               where rn <= {num_samples}
                               """
 
-    return pd.read_sql(query, connection)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        return pd.read_sql(query, connection)
 
 
 

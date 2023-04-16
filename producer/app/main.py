@@ -53,7 +53,3 @@ async def kafka_produce(data: SensorReading):
     logger.info(response)
 
     return response
-
-
-
-
