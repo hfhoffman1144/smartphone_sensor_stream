@@ -3,7 +3,7 @@ WORKDIR /code/app
 COPY ./app /code/app
 
 RUN apt-get update \
-    && apt-get -y install kafkacat\
+    && apt-get -y install kcat\
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
